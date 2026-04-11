@@ -22,14 +22,14 @@ namespace Chess.Data
             base.OnModelCreating(builder);
 
             builder.Entity<Game>()
-                .HasOne(g => g.WhitePlayer)
-                .WithMany() 
-                .HasForeignKey(g => g.WhitePlayerId)
-                .OnDelete(DeleteBehavior.Restrict); 
+            .HasOne(g => g.WhitePlayer)
+            .WithMany(p => p.GamesAsWhite)
+            .HasForeignKey(g => g.WhitePlayerId)
+            .OnDelete(DeleteBehavior.Restrict);
 
             builder.Entity<Game>()
                 .HasOne(g => g.BlackPlayer)
-                .WithMany() 
+                .WithMany(p => p.GamesAsBlack) 
                 .HasForeignKey(g => g.BlackPlayerId)
                 .OnDelete(DeleteBehavior.Restrict);
         }
