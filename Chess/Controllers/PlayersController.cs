@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Chess.Data;
 using Chess.Models;
@@ -12,20 +7,18 @@ namespace Chess.Controllers
 {
     public class PlayersController : Controller
     {
-        private readonly ChessDbContext _context;
+        private readonly ChessDbContext DbContext;
 
         public PlayersController(ChessDbContext context)
         {
-            _context = context;
+            DbContext = context;
         }
 
-        // GET: Players
         public async Task<IActionResult> Index()
         {
-            return View(await _context.Players.ToListAsync());
+            return View(await DbContext.Players.ToListAsync());
         }
 
-        // GET: Players/Details/5
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
@@ -33,7 +26,7 @@ namespace Chess.Controllers
                 return NotFound();
             }
 
-            var player = await _context.Players
+            Player? player = await DbContext.Players
                 .FirstOrDefaultAsync(m => m.Id == id);
             if (player == null)
             {
@@ -43,29 +36,24 @@ namespace Chess.Controllers
             return View(player);
         }
 
-        // GET: Players/Create
         public IActionResult Create()
         {
             return View();
         }
 
-        // POST: Players/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Id,Username,Rating,Wins,Losses,Draws,JoinedAt")] Player player)
         {
             if (ModelState.IsValid)
             {
-                _context.Add(player);
-                await _context.SaveChangesAsync();
+                DbContext.Add(player);
+                await DbContext.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
             return View(player);
         }
 
-        // GET: Players/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -73,7 +61,7 @@ namespace Chess.Controllers
                 return NotFound();
             }
 
-            var player = await _context.Players.FindAsync(id);
+            Player? player = await DbContext.Players.FindAsync(id);
             if (player == null)
             {
                 return NotFound();
@@ -81,9 +69,6 @@ namespace Chess.Controllers
             return View(player);
         }
 
-        // POST: Players/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("Id,Username,Rating,Wins,Losses,Draws,JoinedAt")] Player player)
@@ -97,8 +82,8 @@ namespace Chess.Controllers
             {
                 try
                 {
-                    _context.Update(player);
-                    await _context.SaveChangesAsync();
+                    DbContext.Update(player);
+                    await DbContext.SaveChangesAsync();
                 }
                 catch (DbUpdateConcurrencyException)
                 {
@@ -116,7 +101,6 @@ namespace Chess.Controllers
             return View(player);
         }
 
-        // GET: Players/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
@@ -124,7 +108,7 @@ namespace Chess.Controllers
                 return NotFound();
             }
 
-            var player = await _context.Players
+            Player? player = await DbContext.Players
                 .FirstOrDefaultAsync(m => m.Id == id);
             if (player == null)
             {
@@ -134,24 +118,23 @@ namespace Chess.Controllers
             return View(player);
         }
 
-        // POST: Players/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var player = await _context.Players.FindAsync(id);
+            Player? player = await DbContext.Players.FindAsync(id);
             if (player != null)
             {
-                _context.Players.Remove(player);
+                DbContext.Players.Remove(player);
             }
 
-            await _context.SaveChangesAsync();
+            await DbContext.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
 
         private bool PlayerExists(int id)
         {
-            return _context.Players.Any(e => e.Id == id);
+            return DbContext.Players.Any(e => e.Id == id);
         }
     }
 }
