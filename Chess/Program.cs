@@ -16,7 +16,10 @@ namespace Chess
                 options.UseSqlServer(connectionString));
             builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
-            builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true)
+            builder.Services.AddDefaultIdentity<IdentityUser>(options =>
+            {
+                ConfigureIdentity(builder.Configuration, options);
+            })
                 .AddEntityFrameworkStores<ChessDbContext>();
             builder.Services.AddControllersWithViews();
 
@@ -47,6 +50,28 @@ namespace Chess
             app.MapRazorPages();
 
             app.Run();
+        }
+
+        private static void ConfigureIdentity(ConfigurationManager configuration, IdentityOptions options)
+        {
+            options.SignIn.RequireConfirmedAccount = configuration
+                .GetValue<bool>("IdentityOptions:SignIn:RequireConfirmedAccount");
+            options.SignIn.RequireConfirmedEmail = configuration
+                .GetValue<bool>("IdentityOptions:SignIn:RequireConfirmedEmail");
+            options.SignIn.RequireConfirmedPhoneNumber = configuration
+                .GetValue<bool>("IdentityOptions:SignIn:RequireConfirmedPhoneNumber");
+
+            options.Password.RequireDigit = configuration
+                .GetValue<bool>("IdentityOptions:Password:RequireDigit");
+            options.Password.RequireLowercase = configuration
+                .GetValue<bool>("IdentityOptions:Password:RequireLowercase");
+            options.Password.RequireNonAlphanumeric = configuration
+                .GetValue<bool>("IdentityOptions:Password:RequireNonAlphanumeric");
+            options.Password.RequireUppercase = configuration
+                .GetValue<bool>("IdentityOptions:Password:RequireUppercase");
+
+            options.Password.RequiredLength = configuration
+                .GetValue<int>("IdentityOptions:Password:RequiredLength");
         }
     }
 }
