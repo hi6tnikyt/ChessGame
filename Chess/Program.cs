@@ -1,5 +1,7 @@
 using Chess.Data;
 using Chess.Models;
+using Chess.Services.Interfaces;
+using Chess.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -23,6 +25,7 @@ namespace Chess
             })
                 .AddEntityFrameworkStores<ChessDbContext>();
             builder.Services.AddControllersWithViews();
+            builder.Services.AddScoped<IChessEngineService, ChessEngineService>();
 
             var app = builder.Build();
 
