@@ -1,6 +1,7 @@
 ﻿using Chess.Data;
 using Chess.Models;
 using Chess.Services.Interfaces;
+using Microsoft.EntityFrameworkCore;
 
 
 namespace Chess.Services
@@ -68,6 +69,20 @@ namespace Chess.Services
             }
 
             return false;
+        }
+
+        public async Task<List<Game>> GetPlayerGamesAsync(int userId)
+        {
+            return await _context.Games
+                .Where(g => g.WhitePlayerId == userId || g.BlackPlayerId == userId)
+                .ToListAsync();
+        }
+
+        public async Task<Game?> GetGameByIdAsync(int gameId)
+        {
+            return await _context.Games
+                .Include(g => g.Moves)
+                .FirstOrDefaultAsync(g => g.Id == gameId);
         }
 
         private string[,] ParseBoard(string fen) { return new string[8, 8]; }
