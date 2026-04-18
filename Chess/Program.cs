@@ -26,6 +26,7 @@ namespace Chess
                 .AddEntityFrameworkStores<ChessDbContext>();
             builder.Services.AddControllersWithViews();
             builder.Services.AddScoped<IChessEngineService, ChessEngineService>();
+            builder.Services.AddScoped<IGameService, GameService>();
 
             var app = builder.Build();
 

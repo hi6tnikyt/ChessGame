@@ -21,6 +21,9 @@ namespace Chess.Models
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
+        public string BoardFen { get; set; } = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR";
+        public string CurrentTurn { get; set; } = "White";
+
         public virtual ICollection<Move> Moves { get; set; }
             = new List<Move>();
     }
