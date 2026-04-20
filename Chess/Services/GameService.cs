@@ -3,7 +3,6 @@ using Chess.Models;
 using Chess.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
-
 namespace Chess.Services
 {
     public class GameService : IGameService
@@ -25,8 +24,8 @@ namespace Chess.Services
                 BlackPlayerId = blackPlayerId,
                 BoardFen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR",
                 CurrentTurn = "White",
-                CreatedAt = DateTime.UtcNow, 
-                Status = "Active"          
+                CreatedAt = DateTime.UtcNow,
+                Status = "Active"
             };
 
             _context.Games.Add(game);
@@ -36,7 +35,10 @@ namespace Chess.Services
 
         public async Task<bool> MakeMoveAsync(int gameId, int x1, int y1, int x2, int y2, int playerId)
         {
-            var game = await _context.Games.FindAsync(gameId);
+
+            var game = await _context.Games
+                .Include(g => g.Moves)
+                .FirstOrDefaultAsync(g => g.Id == gameId);
 
             if (game == null || game.Status != "Active") return false;
 
@@ -55,9 +57,9 @@ namespace Chess.Services
                 var move = new Move
                 {
                     GameId = gameId,
-                    MoveText = $"{x1},{y1}-{x2},{y2}",
+                    MoveText = $"{ConvertXToFile(y1)}{8 - x1} to {ConvertXToFile(y2)}{8 - x2}", 
                     MoveNumber = game.Moves.Count + 1,
-                    MoveTime = DateTime.UtcNow 
+                    MoveTime = DateTime.UtcNow
                 };
                 _context.Moves.Add(move);
 
@@ -75,6 +77,8 @@ namespace Chess.Services
         {
             return await _context.Games
                 .Where(g => g.WhitePlayerId == userId || g.BlackPlayerId == userId)
+                .Include(g => g.WhitePlayer)
+                .Include(g => g.BlackPlayer)
                 .ToListAsync();
         }
 
@@ -82,11 +86,87 @@ namespace Chess.Services
         {
             return await _context.Games
                 .Include(g => g.Moves)
+                .Include(g => g.WhitePlayer)
+                .Include(g => g.BlackPlayer)
                 .FirstOrDefaultAsync(g => g.Id == gameId);
         }
 
-        private string[,] ParseBoard(string fen) { return new string[8, 8]; }
-        private PieceType GetPieceTypeAt(string[,] board, int x, int y) { return PieceType.Pawn; }
-        private string UpdateBoard(string[,] board, int x1, int y1, int x2, int y2) { return "updated_fen"; }
+
+        private string[,] ParseBoard(string fen)
+        {
+            string[,] board = new string[8, 8];
+            string boardPart = fen.Split(' ')[0]; 
+            string[] rows = boardPart.Split('/');
+
+            for (int i = 0; i < 8; i++)
+            {
+                int col = 0;
+                foreach (char c in rows[i])
+                {
+                    if (char.IsDigit(c))
+                    {
+                        col += (int)char.GetNumericValue(c);
+                    }
+                    else
+                    {
+                        board[i, col] = c.ToString(); 
+                        col++;
+                    }
+                }
+            }
+            return board;
+        }
+
+        private string UpdateBoard(string[,] board, int x1, int y1, int x2, int y2)
+        {
+            board[x2, y2] = board[x1, y1];
+            board[x1, y1] = null;
+
+            List<string> fenRows = new List<string>();
+            for (int i = 0; i < 8; i++)
+            {
+                string rowStr = "";
+                int emptyCount = 0;
+                for (int j = 0; j < 8; j++)
+                {
+                    if (string.IsNullOrEmpty(board[i, j]))
+                    {
+                        emptyCount++;
+                    }
+                    else
+                    {
+                        if (emptyCount > 0)
+                        {
+                            rowStr += emptyCount.ToString();
+                            emptyCount = 0;
+                        }
+                        rowStr += board[i, j];
+                    }
+                }
+                if (emptyCount > 0) rowStr += emptyCount.ToString();
+                fenRows.Add(rowStr);
+            }
+            return string.Join("/", fenRows);
+        }
+
+        private PieceType GetPieceTypeAt(string[,] board, int x, int y)
+        {
+            string piece = board[x, y]?.ToLower();
+            return piece switch
+            {
+                "p" => PieceType.Pawn,
+                "r" => PieceType.Rook,
+                "n" => PieceType.Knight,
+                "b" => PieceType.Bishop,
+                "q" => PieceType.Queen,
+                "k" => PieceType.King,
+                _ => PieceType.Pawn
+            };
+        }
+
+        private string ConvertXToFile(int y)
+        {
+            return ((char)('a' + y)).ToString();
+        }
     }
 }
